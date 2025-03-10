@@ -23,7 +23,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for enhanced UI
+# Custom CSS for enhanced UI - UPDATED TO HIDE ELEMENTS
 st.markdown("""
 <style>
     /* Main page background */
@@ -106,6 +106,55 @@ st.markdown("""
         font-size: 14px;
         color: #7f8c8d;
         margin-top: 5px;
+    }
+    
+    /* Hide "Made with Streamlit" footer */
+    footer {
+        visibility: hidden;
+    }
+    
+    /* Hide the GitHub, Share buttons */
+    .css-14xtw13.e1tzin5v0 {
+        display: none;
+    }
+    
+    /* Hide all icons in the top right corner */
+    header .css-hy8qiv {
+        display: none;
+    }
+    
+    /* Hide the manage app button */
+    .st-emotion-cache-18ni7ap.ezrtsby2 {
+        display: none;
+    }
+    
+    /* Hide the deployment info and header elements */
+    [data-testid="stToolbar"] {
+        display: none !important;
+    }
+    
+    /* Hide other header elements */
+    section[data-testid="stSidebar"] > div > div:first-child {
+        height: auto;
+    }
+    
+    .st-emotion-cache-1dp5vir.ezrtsby1 {
+        display: none;
+    }
+    
+    /* Additional selector for GitHub icon and Share buttons */
+    .st-emotion-cache-r421ms.e1ewe7hr3 {
+        display: none;
+    }
+    
+    /* Hide any other toolbar elements */
+    .st-emotion-cache-e370rw.e1g8pov61 {
+        display: none;
+    }
+    
+    /* Hide all header buttons and icons */
+    [data-testid="stHeader"] {
+        display: none !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -432,7 +481,7 @@ def main():
         st.markdown('<hr>', unsafe_allow_html=True)
         st.markdown('<p style="font-size: 12px; color: #95a5a6;">© 2025 ThyroDosingAI</p>', unsafe_allow_html=True)
         st.markdown('<p style="font-size: 12px; color: #95a5a6;">Based on machine learning research from KAIMRC</p>', unsafe_allow_html=True)
-        st.markdown('<p style="font-size: 12px; color: #95a5a6;">Developed by KliniKa CRO</p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-size: 12px; color: #95a5a6;">Developed by KlinikaCRO</p>', unsafe_allow_html=True)
     
     # Main content
     if selected == "Calculator":
@@ -719,7 +768,16 @@ def model_insights_page(model):
             title='Feature Importance',
             color_discrete_sequence=['#3498db']
         )
-
+        
+        st.plotly_chart(fig)
+        
+        st.markdown("""
+        **Key Finding:** While multiple variables were initially identified as potentially predictive, 
+        BMI demonstrated the most consistent and clinically applicable stratification capability. 
+        
+        The other laboratory variables (PTH, T4, T3) showed inconsistent stratification and were not 
+        as reliable for predicting euthyroid achievement in the clinical validation phase.
+        """)
     
     # BMI Impact Analysis
     st.subheader("BMI Impact Analysis")
@@ -812,12 +870,20 @@ def about_page():
     data-driven framework that can significantly improve patient outcomes.
     """)
     
+    # Citations and references
+    st.subheader("References & Citations")
+    
+    st.markdown("""
+    1. Al-Dhahri, S.F., et al., *Optimal levothyroxine dose in post-total thyroidectomy patients: a prediction model for initial dose titration.* Eur Arch Otorhinolaryngol, 2019. **276**(9): p. 2559-2564.
+
+    2. The full research paper on which this tool is based can be accessed through the institution's repository.
+    """)
 
     st.markdown("""
     #### Development
     
     Based on machine learning research from KAIMRC.  
-    Developed by KliniKa Clinical Research Organization.
+    Developed by KlinikaCRO.
     """)
 
 #################################################
