@@ -651,23 +651,19 @@ def calculator_page(model):
                 monitoring_items.insert(1, "**Monthly monitoring recommended due to elevated PTH > 7 pmol/L**")
                 
                 # Add warning for elevated PTH
-                create_info_box("""
-                <p><strong>⚠️ Enhanced Monitoring Required:</strong> PTH level > 7 pmol/L detected. 
+                create_info_box("""⚠️ Enhanced Monitoring Required:</strong> PTH level > 7 pmol/L detected. 
                 Monthly monitoring is recommended to ensure optimal titration and to prevent 
-                complications.</p>
-                """, box_type="warning")
+                complications.""", box_type="warning")
             
             for item in monitoring_items:
                 st.markdown(f"- {item}")
             
             # Special warnings based on BMI category
             if recommendations['bmi_category'] != "Low":
-                create_info_box("""
-                <p><strong>⚠️ Higher BMI Risk Category:</strong> This patient's BMI places them in a higher risk
+                create_info_box("""⚠️Higher BMI Risk Category:</strong> This patient's BMI places them in a higher risk
                 category for achieving euthyroid status (35.7% success rate vs. 57.1% for lower BMI).
                 Consider more frequent monitoring and potentially more aggressive dose adjustment
-                if TSH levels remain outside the target range.</p>
-                """, box_type="warning")
+                if TSH levels remain outside the target range.""", box_type="warning")
             
             # Success indicators section
             st.markdown("#### Clinical Success Indicators")
