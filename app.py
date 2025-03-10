@@ -677,7 +677,7 @@ def calculator_page(model):
                 create_info_box("""
                 <p><strong>⚠️ Enhanced Monitoring Required:</strong> PTH level > 7 pmol/L detected. 
                 Monthly monitoring is recommended to ensure optimal titration and to prevent 
-                complications.</p>
+                complications.</strong></p>
                 """, box_type="warning")
             
             for item in monitoring_items:
@@ -689,7 +689,7 @@ def calculator_page(model):
                 <p><strong>⚠️ Higher BMI Risk Category:</strong> This patient's BMI places them in a higher risk
                 category for achieving euthyroid status (35.7% success rate vs. 57.1% for lower BMI).
                 Consider more frequent monitoring and potentially more aggressive dose adjustment
-                if TSH levels remain outside the target range.</p>
+                if TSH levels remain outside the target range.</strong></p>
                 """, box_type="warning")
             
             # Success indicators section
