@@ -481,7 +481,7 @@ def main():
         st.markdown('<hr>', unsafe_allow_html=True)
         st.markdown('<p style="font-size: 12px; color: #95a5a6;">© 2025 ThyroDosingAI</p>', unsafe_allow_html=True)
         st.markdown('<p style="font-size: 12px; color: #95a5a6;">Based on machine learning research from KAIMRC</p>', unsafe_allow_html=True)
-        st.markdown('<p style="font-size: 12px; color: #95a5a6;">Developed by KlinikaCRO</p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-size: 12px; color: #95a5a6;">Developed by KliniKa Clinical Research Organization</p>', unsafe_allow_html=True)
     
     # Main content
     if selected == "Calculator":
@@ -865,7 +865,7 @@ def about_page():
     #### Development
     
     Based on machine learning research from KAIMRC.  
-    Developed by KlinikaCRO.
+    Developed by KliniKa CRO.
     """)
 
 #################################################
