@@ -865,7 +865,7 @@ def about_page():
     #### Development
     
     Based on machine learning research from KAIMRC.  
-    Developed by KliniKa CRO.
+    Developed by KliniKa Clinical Research Organization.
     """)
 
 #################################################
