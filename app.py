@@ -432,7 +432,7 @@ def main():
         st.markdown('<hr>', unsafe_allow_html=True)
         st.markdown('<p style="font-size: 12px; color: #95a5a6;">© 2025 ThyroDosingAI</p>', unsafe_allow_html=True)
         st.markdown('<p style="font-size: 12px; color: #95a5a6;">Based on machine learning research from KAIMRC</p>', unsafe_allow_html=True)
-        st.markdown('<p style="font-size: 12px; color: #95a5a6;">Developed by KlinikaCRO</p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-size: 12px; color: #95a5a6;">Developed by KliniKa CRO</p>', unsafe_allow_html=True)
     
     # Main content
     if selected == "Calculator":
@@ -812,20 +812,12 @@ def about_page():
     data-driven framework that can significantly improve patient outcomes.
     """)
     
-    # Citations and references
-    st.subheader("References & Citations")
-    
-    st.markdown("""
-    1. Al-Dhahri, S.F., et al., *Optimal levothyroxine dose in post-total thyroidectomy patients: a prediction model for initial dose titration.* Eur Arch Otorhinolaryngol, 2019. **276**(9): p. 2559-2564.
-
-    2. The full research paper on which this tool is based can be accessed through the institution's repository.
-    """)
 
     st.markdown("""
     #### Development
     
     Based on machine learning research from KAIMRC.  
-    Developed by KlinikaCRO.
+    Developed by KliniKa Clinical Research Organization.
     """)
 
 #################################################
