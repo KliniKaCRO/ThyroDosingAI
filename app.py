@@ -769,15 +769,6 @@ def model_insights_page(model):
             color_discrete_sequence=['#3498db']
         )
         
-        st.plotly_chart(fig)
-        
-        st.markdown("""
-        **Key Finding:** While multiple variables were initially identified as potentially predictive, 
-        BMI demonstrated the most consistent and clinically applicable stratification capability. 
-        
-        The other laboratory variables (PTH, T4, T3) showed inconsistent stratification and were not 
-        as reliable for predicting euthyroid achievement in the clinical validation phase.
-        """)
     
     # BMI Impact Analysis
     st.subheader("BMI Impact Analysis")
@@ -870,15 +861,6 @@ def about_page():
     data-driven framework that can significantly improve patient outcomes.
     """)
     
-    # Citations and references
-    st.subheader("References & Citations")
-    
-    st.markdown("""
-    1. Al-Dhahri, S.F., et al., *Optimal levothyroxine dose in post-total thyroidectomy patients: a prediction model for initial dose titration.* Eur Arch Otorhinolaryngol, 2019. **276**(9): p. 2559-2564.
-
-    2. The full research paper on which this tool is based can be accessed through the institution's repository.
-    """)
-
     st.markdown("""
     #### Development
     
