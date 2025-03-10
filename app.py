@@ -1,33 +1,18 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-from sklearn.naive_bayes import GaussianNB
-from sklearn.preprocessing import StandardScaler
-from sklearn.model_selection import cross_val_score, StratifiedKFold
-from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, roc_auc_score
-from sklearn.pipeline import Pipeline
-import joblib
-import base64
-from io import BytesIO
 import plotly.graph_objects as go
-import plotly.express as px
 from streamlit_option_menu import option_menu
-import time
-import pickle
-from PIL import Image
-import json
 
-# Set page config
+# Custom CSS for enhanced UI
 st.set_page_config(
     page_title="ThyroDosingAI: Precision Medicine Levothyroxine Calculator",
-    page_icon="🧠",
+    page_icon="⚕️",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for enhanced UI
+# Add custom CSS
 st.markdown("""
 <style>
     /* Main page background */
@@ -44,91 +29,6 @@ st.markdown("""
         padding-bottom: 10px;
         border-bottom: 2px solid #3498db;
         margin-bottom: 25px;
-    }
-    
-    /* Card styling */
-    .stcard {
-        border-radius: 8px;
-        padding: 20px;
-        background-color: white;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-    }
-    
-    /* Info box styling */
-    .info-box {
-        background-color: #e8f4f8;
-        border-left: 4px solid #3498db;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 0 4px 4px 0;
-    }
-    
-    /* Warning box styling */
-    .warning-box {
-        background-color: #fff5e6;
-        border-left: 4px solid #e67e22;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 0 4px 4px 0;
-    }
-    
-    /* Success box styling */
-    .success-box {
-        background-color: #e9f7ef;
-        border-left: 4px solid #27ae60;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 0 4px 4px 0;
-    }
-    
-    /* Danger box styling */
-    .danger-box {
-        background-color: #fdedeb;
-        border-left: 4px solid #e74c3c;
-        padding: 15px;
-        margin-bottom: 20px;
-        border-radius: 0 4px 4px 0;
-    }
-    
-    /* Input field styling */
-    div[data-baseweb="input"] {
-        border-radius: 6px;
-    }
-    
-    /* Button styling */
-    .stButton>button {
-        border-radius: 6px;
-        font-weight: 600;
-        padding: 0.5rem 1rem;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Primary button */
-    .primary-btn>button {
-        background-color: #3498db;
-        color: white;
-    }
-    
-    /* Progress bar */
-    .stProgress .st-bo {
-        background-color: #3498db;
-    }
-    
-    /* Tabs styling */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 10px;
-    }
-    
-    .stTabs [data-baseweb="tab"] {
-        border-radius: 4px 4px 0 0;
-        padding: 10px 16px;
-        background-color: #f0f2f5;
-    }
-    
-    .stTabs [aria-selected="true"] {
-        background-color: #3498db;
-        color: white;
     }
     
     /* Metric styling */
@@ -151,164 +51,156 @@ st.markdown("""
         color: #7f8c8d;
         margin-top: 5px;
     }
-    
-    /* Custom tooltip */
-    .tooltip {
-        position: relative;
-        display: inline-block;
-        cursor: help;
-    }
-    
-    .tooltip .tooltiptext {
-        visibility: hidden;
-        width: 200px;
-        background-color: #34495e;
-        color: #fff;
-        text-align: center;
-        border-radius: 6px;
-        padding: 10px;
-        position: absolute;
-        z-index: 1;
-        bottom: 125%;
-        left: 50%;
-        margin-left: -100px;
-        opacity: 0;
-        transition: opacity 0.3s;
-        font-size: 12px;
-    }
-    
-    .tooltip:hover .tooltiptext {
-        visibility: visible;
-        opacity: 1;
-    }
-    
-    /* Divider */
-    .divider {
-        margin: 20px 0;
-        border-top: 1px solid #eaecef;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-#################################################
-# Utility Functions
-#################################################
+# Sidebar navigation
+with st.sidebar:
+    st.markdown('<h1 style="font-size: 24px; color: #2c3e50;">ThyroDosingAI ⚕️</h1>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size: 14px; color: #7f8c8d;">Precision Medicine for Post-Thyroidectomy Care</p>', unsafe_allow_html=True)
+    
+    selected = option_menu(
+        menu_title=None,
+        options=["Calculator", "Model Insights", "About"],
+        icons=["calculator", "graph-up", "info-circle"],
+        menu_icon="cast",
+        default_index=0,
+        styles={
+            "container": {"padding": "0!important", "background-color": "#f8f9fa"},
+            "icon": {"color": "#3498db", "font-size": "16px"},
+            "nav-link": {
+                "font-size": "14px",
+                "text-align": "left",
+                "margin": "0px",
+                "--hover-color": "#ebedef",
+            },
+            "nav-link-selected": {"background-color": "#3498db"},
+        }
+    )
+    
+    st.markdown('<hr>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size: 12px; color: #95a5a6;">© 2025 ThyroDosingAI</p>', unsafe_allow_html=True)
+    st.markdown('<p style="font-size: 12px; color: #95a5a6;">Based on machine learning research from KAIMRC</p>', unsafe_allow_html=True)
 
-def create_tooltip(text, tooltip_text):
-    """Create a tooltip with help text"""
-    return f"""
-    <div class="tooltip">{text}
-        <span class="tooltiptext">{tooltip_text}</span>
-    </div>
+# Enhanced personalized dosing function
+def calculate_personalized_dose(weight, bmi, pth=None):
     """
+    Calculate truly personalized levothyroxine dose based on weight, BMI category,
+    and other clinical factors.
+    """
+    # Initial weight-based calculation (standard approach: 1.6-1.8 mcg/kg)
+    base_dose = weight * 1.7  # Using midpoint of standard range
+    
+    # BMI-based risk categorization
+    if bmi <= 27.67:
+        bmi_category = "Low"
+        success_rate = 57.1
+        dose_adjustment = 0  # No adjustment for low BMI
+    elif bmi <= 34.98:
+        bmi_category = "Medium"
+        success_rate = 35.7
+        dose_adjustment = 12.5  # Add 12.5 mcg for medium BMI
+    else:
+        bmi_category = "High"
+        success_rate = 35.7
+        dose_adjustment = 25  # Add 25 mcg for high BMI
+    
+    # Apply initial adjustment
+    adjusted_base_dose = base_dose + dose_adjustment
+    
+    # Round to nearest practical dose (12.5 mcg increments)
+    rounded_base_dose = round(adjusted_base_dose / 12.5) * 12.5
+    
+    # Ensure minimum effective dose (usually 75 mcg)
+    if rounded_base_dose < 75:
+        rounded_base_dose = 75
+    
+    # Cap maximum initial dose (safety consideration)
+    if rounded_base_dose > 200:
+        rounded_base_dose = 200
+    
+    # Create timepoint-specific dosing with progressive adjustments
+    dosing_schedule = {
+        'at_surgery': {
+            'dose': rounded_base_dose,
+            'regimen': f"{rounded_base_dose} mcg daily × 7 days",
+            'range': f"{rounded_base_dose}-{rounded_base_dose + dose_adjustment}"
+        },
+        'at_discharge': {
+            'dose': rounded_base_dose,
+            'regimen': f"{rounded_base_dose} mcg daily × 7 days",
+            'range': f"{rounded_base_dose}-{rounded_base_dose + dose_adjustment}"
+        },
+        'one_month': {
+            'dose': rounded_base_dose,
+            'regimen': f"{rounded_base_dose} mcg daily × 7 days",
+            'range': f"{rounded_base_dose}-{rounded_base_dose + dose_adjustment}"
+        }
+    }
+    
+    # Progressive adjustments for medium and high BMI at later timepoints
+    if bmi_category == "Low":
+        # Low BMI patients typically maintain stable dose
+        three_month_dose = rounded_base_dose
+        six_month_dose = rounded_base_dose
+    elif bmi_category == "Medium":
+        # Medium BMI patients often need moderate increases
+        three_month_dose = rounded_base_dose + 12.5 if rounded_base_dose < 125 else rounded_base_dose
+        six_month_dose = three_month_dose + 12.5 if three_month_dose < 150 else three_month_dose
+    else:  # High BMI
+        # High BMI patients often need more significant increases
+        three_month_dose = rounded_base_dose + 25 if rounded_base_dose < 150 else rounded_base_dose
+        six_month_dose = three_month_dose + 25 if three_month_dose < 175 else three_month_dose
+    
+    # Add later timepoints with adjustments
+    dosing_schedule['three_months'] = {
+        'dose': three_month_dose,
+        'regimen': f"{three_month_dose} mcg daily × 7 days",
+        'range': f"{rounded_base_dose}-{three_month_dose + dose_adjustment * 1.5}"
+    }
+    
+    dosing_schedule['six_months'] = {
+        'dose': six_month_dose,
+        'regimen': f"{six_month_dose} mcg daily × 7 days",
+        'range': f"{rounded_base_dose}-{six_month_dose + dose_adjustment * 2}"
+    }
+    
+    # Special monitoring for high PTH
+    special_monitoring = False
+    if pth is not None and pth > 7:
+        special_monitoring = True
+    
+    # Final recommendation package
+    recommendation = {
+        'bmi_category': bmi_category,
+        'success_rate': success_rate,
+        'base_dose': rounded_base_dose,
+        'dosing_schedule': dosing_schedule,
+        'special_monitoring': special_monitoring
+    }
+    
+    return recommendation
 
-def create_download_link(df, filename="data.csv"):
-    """Create a download link for a dataframe"""
-    csv = df.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()
-    href = f'<a href="data:file/csv;base64,{b64}" download="{filename}">Download CSV File</a>'
-    return href
-
-def create_metrics_card(title, value, description, color="#3498db"):
-    """Create a styled metrics card"""
-    st.markdown(f"""
-    <div class="metric-card">
-        <div style="font-size:14px; color:#7f8c8d;">{title}</div>
-        <div style="font-size:30px; color:{color}; font-weight:700; padding:10px 0;">{value}</div>
-        <div style="font-size:12px; color:#95a5a6;">{description}</div>
-    </div>
-    """, unsafe_allow_html=True)
-
-def create_info_box(text, box_type="info"):
-    """Create a styled info box with different types (info, warning, success, danger)"""
-    st.markdown(f"""
-    <div class="{box_type}-box">
-        {text}
-    </div>
-    """, unsafe_allow_html=True)
-
-def plot_variable_importance(var_importance, n=10, width=600, height=400):
-    """Create a variable importance plot"""
-    # Sort by importance and take top n
-    var_importance = dict(sorted(var_importance.items(), key=lambda x: x[1], reverse=True)[:n])
-    
-    fig = px.bar(
-        x=list(var_importance.values()),
-        y=list(var_importance.keys()),
-        orientation='h',
-        labels={'x': 'Importance', 'y': 'Variable'},
-        title='Variable Importance'
-    )
-    
-    fig.update_layout(width=width, height=height)
-    fig.update_traces(marker_color='#3498db')
-    
-    return fig
-
-def plot_bmi_dose_relationship(width=600, height=400):
-    """Create a plot showing the relationship between BMI and dose requirements"""
-    # Data derived from the study
-    bmi_categories = ['Low BMI (≤27.67)', 'Medium BMI (27.67-34.98)', 'High BMI (>34.98)']
-    success_rates = [57.1, 35.7, 35.7]
-    dose_variations = [0, 12.5, 25]
-    
-    fig = go.Figure()
-    
-    # Add bars for success rates
-    fig.add_trace(go.Bar(
-        x=bmi_categories,
-        y=success_rates,
-        name='Success Rate (%)',
-        marker_color='#27ae60',
-        opacity=0.7
-    ))
-    
-    # Add line for dose variations
-    fig.add_trace(go.Scatter(
-        x=bmi_categories,
-        y=dose_variations,
-        mode='lines+markers',
-        name='Dose Variation (mcg)',
-        marker=dict(color='#e74c3c'),
-        yaxis='y2'
-    ))
-    
-    # Update layout with dual y-axis
-    fig.update_layout(
-        title='BMI Impact on Success Rate and Dose Requirements',
-        xaxis=dict(title='BMI Category'),
-        yaxis=dict(title='Success Rate (%)', side='left', range=[0, 100]),
-        yaxis2=dict(title='Dose Variation (mcg)', side='right', overlaying='y', range=[0, 30]),
-        legend=dict(x=0.01, y=0.99, bgcolor='rgba(255, 255, 255, 0.5)'),
-        width=width,
-        height=height
-    )
-    
-    return fig
-
-def plot_dosing_timeline(bmi_category, width=700, height=400):
-    """Create a dosing timeline visualization for a specific BMI category"""
+# Function to plot dosing timeline
+def plot_dosing_timeline(recommendation, width=700, height=400):
+    """Create a dosing timeline visualization for the patient's recommendations"""
     timepoints = ['At Surgery', 'At Discharge', 'One Month', 'Three Months', 'Six Months']
     
-    if bmi_category == 'Low':
-        base_dose = 100
-        dose_adjustment = 0
-    elif bmi_category == 'Medium':
-        base_dose = 100
-        dose_adjustment = 12.5
-    else:  # High
-        base_dose = 100
-        dose_adjustment = 25
-    
-    # Create dose ranges
-    min_doses = [base_dose] * 5
-    max_doses = [
-        base_dose + dose_adjustment,      # At Surgery
-        base_dose + dose_adjustment,      # At Discharge
-        base_dose + dose_adjustment,      # One Month
-        base_dose + dose_adjustment*1.5,  # Three Months
-        base_dose + dose_adjustment*2,    # Six Months
+    # Extract doses from recommendation
+    min_doses = [
+        recommendation['dosing_schedule']['at_surgery']['dose'],
+        recommendation['dosing_schedule']['at_discharge']['dose'],
+        recommendation['dosing_schedule']['one_month']['dose'],
+        recommendation['dosing_schedule']['three_months']['dose'],
+        recommendation['dosing_schedule']['six_months']['dose'],
     ]
+    
+    # Extract ranges (max values)
+    max_doses = []
+    for timepoint in ['at_surgery', 'at_discharge', 'one_month', 'three_months', 'six_months']:
+        range_str = recommendation['dosing_schedule'][timepoint]['range']
+        max_val = float(range_str.split('-')[1]) if '-' in range_str else float(range_str)
+        max_doses.append(max_val)
     
     # Create figure
     fig = go.Figure()
@@ -323,17 +215,17 @@ def plot_dosing_timeline(bmi_category, width=700, height=400):
         name='Dose Range'
     ))
     
-    # Add min line
+    # Add min line (actual prescribed doses)
     fig.add_trace(go.Scatter(
         x=timepoints,
         y=min_doses,
         mode='lines+markers',
         line=dict(color='#3498db', width=2),
         marker=dict(size=8),
-        name='Minimum Dose'
+        name='Prescribed Dose'
     ))
     
-    # Add max line
+    # Add max line (potential dose ceiling)
     fig.add_trace(go.Scatter(
         x=timepoints,
         y=max_doses,
@@ -345,7 +237,7 @@ def plot_dosing_timeline(bmi_category, width=700, height=400):
     
     # Update layout
     fig.update_layout(
-        title=f'Levothyroxine Dosing Timeline for {bmi_category} BMI Category',
+        title=f'Levothyroxine Dosing Timeline',
         xaxis=dict(title='Timepoint'),
         yaxis=dict(title='Dose (mcg)'),
         legend=dict(x=0.01, y=0.99, bgcolor='rgba(255, 255, 255, 0.5)'),
@@ -354,179 +246,20 @@ def plot_dosing_timeline(bmi_category, width=700, height=400):
     )
     
     return fig
-    
-#################################################
-# Model and Prediction Functions
-#################################################
 
-class NaiveBayesClassifier:
-    """Naive Bayes Classifier for predicting euthyroid status achievement"""
-    
-    def __init__(self):
-        self.model = GaussianNB()
-        self.scaler = StandardScaler()
-        self.feature_importance = {
-            'BMI': 0.080,
-            'PTH': 0.175,
-            'T4': 0.095,
-            'T3': 0.015
-        }
-        self.cv_results = {
-            'accuracy': 0.828,
-            'accuracy_std': 0.045,
-            'precision': 0.716,
-            'precision_std': 0.066,
-            'recall': 0.983,
-            'recall_std': 0.021,
-            'f1': 0.838,
-            'f1_std': 0.044,
-            'auc': 0.855,
-            'auc_std': 0.042
-        }
-    
-    def predict_euthyroid_status(self, bmi):
-        """Predict euthyroid status achievement based on BMI"""
-        # Based on BMI thresholds from the study
-        if bmi <= 27.67:
-            success_prob = 0.571  # 57.1%
-            return {'success_prob': success_prob, 'risk_level': 'Low'}
-        else:
-            success_prob = 0.357  # 35.7%
-            if bmi <= 34.98:
-                return {'success_prob': success_prob, 'risk_level': 'Medium'}
-            else:
-                return {'success_prob': success_prob, 'risk_level': 'High'}
-
-    def get_dose_recommendations(self, bmi, pth=None):
-        """Get personalized dose recommendations based on BMI and optionally PTH"""
-        prediction = self.predict_euthyroid_status(bmi)
-        
-        # Initialize base dose and adjustments
-        base_dose = 100  # mcg
-        
-        # Determine dose adjustment based on BMI category
-        if prediction['risk_level'] == 'Low':
-            dose_adjustment = 0
-        elif prediction['risk_level'] == 'Medium':
-            dose_adjustment = 12.5
-        else:  # High risk
-            dose_adjustment = 25
-        
-        # Generate time-based dosing recommendations
-        dosing_schedule = {
-            'at_surgery': {
-                'base_dose': base_dose,
-                'range': f"{base_dose}-{base_dose + dose_adjustment}",
-                'regimen': f"{base_dose} mcg daily × 7 days"
-            },
-            'at_discharge': {
-                'base_dose': base_dose,
-                'range': f"{base_dose}-{base_dose + dose_adjustment}",
-                'regimen': f"{base_dose} mcg daily × 7 days"
-            },
-            'one_month': {
-                'base_dose': base_dose,
-                'range': f"{base_dose}-{base_dose + dose_adjustment}",
-                'regimen': f"{base_dose} mcg daily × 7 days"
-            },
-            'three_months': {
-                'base_dose': base_dose,
-                'range': f"{base_dose}-{base_dose + dose_adjustment*1.5}",
-                'regimen': f"{base_dose} mcg daily × 7 days"
-            },
-            'six_months': {
-                'base_dose': base_dose,
-                'range': f"{base_dose}-{base_dose + dose_adjustment*2}",
-                'regimen': f"{base_dose} mcg daily × 7 days"
-            }
-        }
-        
-        # Add special monitoring for high PTH
-        special_monitoring = False
-        if pth is not None and pth > 7:
-            special_monitoring = True
-        
-        # Assemble full recommendation
-        recommendation = {
-            'prediction': prediction,
-            'dosing_schedule': dosing_schedule,
-            'special_monitoring': special_monitoring,
-            'monitoring_plan': {
-                'initial_followup': '6-8 weeks',
-                'lab_tests': ['TSH', 'T4'],
-                'pth_monitoring': 'Monthly if PTH > 7 pmol/L',
-                'dose_adjustment': 'If TSH outside 0.3-4.5 mIU/L',
-                't3_monitoring': 'Consider in selected cases'
-            }
-        }
-        
-        return recommendation
-    
-    def get_feature_importance(self):
-        """Get feature importance from the model"""
-        return self.feature_importance
-    
-    def get_cv_results(self):
-        """Get cross-validation results"""
-        return self.cv_results
-
-#################################################
-# Main App Structure
-#################################################
-
-def main():
-    # Initialize the model
-    model = NaiveBayesClassifier()
-    
-    # Sidebar navigation
-    with st.sidebar:
-        st.markdown('<h1 style="font-size: 24px; color: #2c3e50;">ThyroDosingAI ⚕️</h1>', unsafe_allow_html=True)
-        st.markdown('<p style="font-size: 14px; color: #7f8c8d;">Precision Medicine for Post-Thyroidectomy Care</p>', unsafe_allow_html=True)
-        
-        selected = option_menu(
-            menu_title=None,
-            options=["Calculator", "Model Insights", "About"],
-            icons=["calculator", "graph-up", "journal-medical", "info-circle"],
-            menu_icon="cast",
-            default_index=0,
-            styles={
-                "container": {"padding": "0!important", "background-color": "#f8f9fa"},
-                "icon": {"color": "#3498db", "font-size": "16px"},
-                "nav-link": {
-                    "font-size": "14px",
-                    "text-align": "left",
-                    "margin": "0px",
-                    "--hover-color": "#ebedef",
-                },
-                "nav-link-selected": {"background-color": "#3498db"},
-            }
-        )
-        
-        st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
-        st.markdown('<p style="font-size: 12px; color: #95a5a6;">© 2025 ThyroDosingAI</p>', unsafe_allow_html=True)
-        st.markdown('<p style="font-size: 12px; color: #95a5a6;">Based on machine learning research from KAIMRC. Developed by KliniKa CRO</p>', unsafe_allow_html=True)
-    
-    # Main content
-    if selected == "Calculator":
-        calculator_page(model)
-    elif selected == "Model Insights":
-        model_insights_page(model)
-    elif selected == "About":
-        about_page()
-
-def calculator_page(model):
-    """Main calculator page"""
+# Main content
+if selected == "Calculator":
     st.markdown('<h1 class="main-header">Precision Levothyroxine Dosing Calculator</h1>', unsafe_allow_html=True)
     
-    create_info_box("""
-    <p><strong>Clinical Decision Support Tool:</strong> This calculator provides personalized levothyroxine dosing 
+    # Information box
+    st.info("""
+    **Clinical Decision Support Tool:** This calculator provides truly personalized levothyroxine dosing 
     recommendations for patients who have undergone total thyroidectomy, based on machine learning analysis 
-    of 619 patients from the King Abdullah International Medical Research Center (KAIMRC).</p>
+    of 619 patients from the King Abdullah International Medical Research Center (KAIMRC).
     """)
     
     # Main input form
     with st.container():
-        st.markdown('<div class="stcard">', unsafe_allow_html=True)
         st.subheader("Patient Information")
         
         col1, col2 = st.columns(2)
@@ -591,47 +324,51 @@ def calculator_page(model):
                 creatinine = st.number_input("Creatinine (μmol/L)", min_value=0.0, max_value=200.0, value=0.0, step=0.1)
         
         # Calculate button
-        st.markdown('<div class="primary-btn">', unsafe_allow_html=True)
-        calculate_button = st.button("Calculate Optimal Dosing")
-        st.markdown('</div>', unsafe_allow_html=True)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+        calculate_button = st.button("Calculate Optimal Dosing", type="primary")
     
     # Results section
     if calculate_button:
         with st.spinner("Analyzing patient data and generating personalized recommendations..."):
-            # Simulate processing time for better UX
-            time.sleep(1)
-            
-            # Get recommendations
-            recommendations = model.get_dose_recommendations(bmi, pth if pth > 0 else None)
+            # Get personalized recommendations
+            recommendations = calculate_personalized_dose(weight, bmi, pth if pth > 0 else None)
             
             # Display results
-            st.markdown('<div class="stcard">', unsafe_allow_html=True)
             st.subheader("Personalized Levothyroxine Dosing Recommendations")
             
             # Success probability and risk level
-            col1, col2, col3 = st.columns([1, 1, 1])
+            col1, col2, col3 = st.columns(3)
             
             with col1:
-                success_prob = recommendations['prediction']['success_prob'] * 100
+                success_prob = recommendations['success_rate']
                 success_color = "#27ae60" if success_prob > 50 else "#e74c3c"
-                create_metrics_card("Success Probability", f"{success_prob:.1f}%", 
-                                   "Likelihood of achieving euthyroid status at 6 months", 
-                                   color=success_color)
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div style="font-size:14px; color:#7f8c8d;">Success Probability</div>
+                    <div style="font-size:30px; color:{success_color}; font-weight:700; padding:10px 0;">{success_prob:.1f}%</div>
+                    <div style="font-size:12px; color:#95a5a6;">Likelihood of achieving euthyroid status at 6 months</div>
+                </div>
+                """, unsafe_allow_html=True)
                 
             with col2:
-                risk_level = recommendations['prediction']['risk_level']
-                risk_color = "#27ae60" if risk_level == "Low" else "#e74c3c"
-                create_metrics_card("Risk Level", risk_level, 
-                                   "Based on BMI classification", 
-                                   color=risk_color)
+                risk_level = "Low" if bmi <= 27.67 else "Medium" if bmi <= 34.98 else "High"
+                risk_color = "#27ae60" if risk_level == "Low" else "#f39c12" if risk_level == "Medium" else "#e74c3c"
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div style="font-size:14px; color:#7f8c8d;">Risk Level</div>
+                    <div style="font-size:30px; color:{risk_color}; font-weight:700; padding:10px 0;">{risk_level}</div>
+                    <div style="font-size:12px; color:#95a5a6;">Based on BMI classification</div>
+                </div>
+                """, unsafe_allow_html=True)
                 
             with col3:
-                base_dose = recommendations['dosing_schedule']['at_surgery']['base_dose']
-                create_metrics_card("Base Dose", f"{base_dose} mcg", 
-                                   "Starting levothyroxine dose", 
-                                   color="#3498db")
+                base_dose = recommendations['base_dose']
+                st.markdown(f"""
+                <div class="metric-card">
+                    <div style="font-size:14px; color:#7f8c8d;">Personalized Base Dose</div>
+                    <div style="font-size:30px; color:#3498db; font-weight:700; padding:10px 0;">{base_dose} mcg</div>
+                    <div style="font-size:12px; color:#95a5a6;">Starting levothyroxine dose</div>
+                </div>
+                """, unsafe_allow_html=True)
             
             st.markdown('<div style="height:20px"></div>', unsafe_allow_html=True)
             
@@ -659,7 +396,7 @@ def calculator_page(model):
             st.dataframe(dosing_df, use_container_width=True, hide_index=True)
             
             # Dosing timeline visualization
-            st.plotly_chart(plot_dosing_timeline(risk_level))
+            st.plotly_chart(plot_dosing_timeline(recommendations))
             
             # Monitoring plan
             st.markdown("#### Monitoring Plan")
@@ -674,222 +411,194 @@ def calculator_page(model):
                 monitoring_items.insert(1, "**Monthly monitoring recommended due to elevated PTH > 7 pmol/L**")
                 
                 # Add warning for elevated PTH
-                create_info_box("""⚠️ Enhanced Monitoring Required: PTH level > 7 pmol/L detected. 
+                st.warning("""
+                **⚠️ Enhanced Monitoring Required:** PTH level > 7 pmol/L detected. 
                 Monthly monitoring is recommended to ensure optimal titration and to prevent 
-                complications.""", box_type="warning")
+                complications.
+                """)
             
             for item in monitoring_items:
                 st.markdown(f"- {item}")
             
             # Special warnings based on BMI category
-            if risk_level != "Low":
-                create_info_box("""⚠️ Higher BMI Risk Category: This patient's BMI places them in a higher risk
+            if recommendations['bmi_category'] != "Low":
+                st.warning(f"""
+                **⚠️ Higher BMI Risk Category:** This patient's BMI places them in a higher risk
                 category for achieving euthyroid status (35.7% success rate vs. 57.1% for lower BMI).
                 Consider more frequent monitoring and potentially more aggressive dose adjustment
-                if TSH levels remain outside the target range.""", box_type="warning")
+                if TSH levels remain outside the target range.
+                """)
             
             # Success indicators section
             st.markdown("#### Clinical Success Indicators")
             st.markdown("Target euthyroid status: **TSH 0.3-4.5 mIU/L**")
             
-            # Download button for recommendations
-            recommendation_df = pd.DataFrame({
-                "Parameter": ["Patient BMI", "BMI Category", "Risk Level", "Success Probability", 
-                             "Base Dose", "Special Monitoring"],
-                "Value": [f"{bmi:.1f} kg/m²", risk_level, recommendations['prediction']['risk_level'],
-                         f"{success_prob:.1f}%", f"{base_dose} mcg",
-                         "Yes" if recommendations['special_monitoring'] else "No"]
-            })
-            
-            st.markdown('<div style="height:20px"></div>', unsafe_allow_html=True)
-            st.markdown(create_download_link(dosing_df, "levothyroxine_dosing_schedule.csv"), unsafe_allow_html=True)
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-
-def model_insights_page(model):
-    """Page showing model insights and performance metrics"""
+elif selected == "Model Insights":
     st.markdown('<h1 class="main-header">Model Insights & Performance Metrics</h1>', unsafe_allow_html=True)
     
     # Model overview
-    with st.container():
-        st.markdown('<div class="stcard">', unsafe_allow_html=True)
-        st.subheader("Machine Learning Model Overview")
-        
-        col1, col2 = st.columns([1, 1])
-        
-        with col1:
-            st.markdown("""
-            The dosing recommendations are based on a **Naive Bayes classifier** trained on data from 
-            619 post-thyroidectomy patients. The model was validated using 10-fold cross-validation 
-            and showed excellent performance at predicting euthyroid status at six months post-surgery.
-            
-            BMI was identified as the dominant clinically applicable predictor, with clear 
-            stratification of success rates across BMI categories.
-            """)
-            
-        with col2:
-            # Model details
-            st.markdown("#### Model Details")
-            st.markdown("- **Algorithm:** Naive Bayes Classifier")
-            st.markdown("- **Training Sample:** 619 patients")
-            st.markdown("- **Patient Demographics:** 82.7% female, BMI 31.8 ± 7.4 kg/m²")
-            st.markdown("- **Validation Method:** 10-fold cross-validation")
-            st.markdown("- **Target Variable:** Euthyroid status (TSH 0.3-4.5 mIU/L) at 6 months")
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.subheader("Machine Learning Model Overview")
     
-    # Performance metrics & Variable importance
     col1, col2 = st.columns([1, 1])
     
     with col1:
-        st.markdown('<div class="stcard">', unsafe_allow_html=True)
-        st.subheader("Performance Metrics")
+        st.markdown("""
+        The dosing recommendations are based on a **Naive Bayes classifier** trained on data from 
+        619 post-thyroidectomy patients. The model was validated using 10-fold cross-validation 
+        and showed excellent performance at predicting euthyroid status at six months post-surgery.
         
-        # Get CV results
-        cv_results = model.get_cv_results()
+        BMI was identified as the dominant clinically applicable predictor, with clear 
+        stratification of success rates across BMI categories.
+        """)
         
-        # Display metrics
-        metrics_df = pd.DataFrame({
-            "Metric": ["Accuracy", "Precision", "Recall (Sensitivity)", "F1-Score", "AUC-ROC"],
-            "Value": [
-                f"{cv_results['accuracy']:.3f} ± {cv_results['accuracy_std']:.3f}",
-                f"{cv_results['precision']:.3f} ± {cv_results['precision_std']:.3f}",
-                f"{cv_results['recall']:.3f} ± {cv_results['recall_std']:.3f}",
-                f"{cv_results['f1']:.3f} ± {cv_results['f1_std']:.3f}",
-                f"{cv_results['auc']:.3f} ± {cv_results['auc_std']:.3f}"
-            ]
-        })
-        
-        st.dataframe(metrics_df, use_container_width=True, hide_index=True)
-        
-        # Metrics visualization
-        metrics = {
-            'Accuracy': cv_results['accuracy'],
-            'Precision': cv_results['precision'],
-            'Recall': cv_results['recall'],
-            'F1-Score': cv_results['f1'],
-            'AUC-ROC': cv_results['auc']
-        }
-        
-        fig = px.bar(
-            x=list(metrics.keys()),
-            y=list(metrics.values()),
-            labels={'x': 'Metric', 'y': 'Value'},
-            title='Model Performance Metrics',
-            color_discrete_sequence=['#3498db']
-        )
-        
-        fig.update_layout(yaxis_range=[0, 1])
-        st.plotly_chart(fig)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
-    
     with col2:
-        st.markdown('<div class="stcard">', unsafe_allow_html=True)
-        st.subheader("Feature Importance")
-        
-        # Get feature importance
-        feature_importance = model.get_feature_importance()
-        
-        # Plot
-        fig = plot_variable_importance(feature_importance)
-        st.plotly_chart(fig)
-        
+        # Model details
+        st.markdown("#### Model Details")
+        st.markdown("- **Algorithm:** Naive Bayes Classifier")
+        st.markdown("- **Training Sample:** 619 patients")
+        st.markdown("- **Patient Demographics:** 82.7% female, BMI 31.8 ± 7.4 kg/m²")
+        st.markdown("- **Validation Method:** 10-fold cross-validation")
+        st.markdown("- **Target Variable:** Euthyroid status (TSH 0.3-4.5 mIU/L) at 6 months")
+    
+    # Performance metrics
+    st.subheader("Performance Metrics")
+    
+    # Display metrics
+    metrics_df = pd.DataFrame({
+        "Metric": ["Accuracy", "Precision", "Recall (Sensitivity)", "F1-Score", "AUC-ROC"],
+        "Value": [
+            "0.828 ± 0.045",
+            "0.716 ± 0.066",
+            "0.983 ± 0.021",
+            "0.838 ± 0.044",
+            "0.855 ± 0.042"
+        ]
+    })
+    
+    st.dataframe(metrics_df, use_container_width=True, hide_index=True)
     
     # BMI Impact Analysis
-    with st.container():
-        st.markdown('<div class="stcard">', unsafe_allow_html=True)
-        st.subheader("BMI Impact Analysis")
+    st.subheader("BMI Impact Analysis")
+    
+    col1, col2 = st.columns([3, 2])
+    
+    with col1:
+        # Create data for plot
+        bmi_categories = ['Low BMI (≤27.67)', 'Medium BMI (27.67-34.98)', 'High BMI (>34.98)']
+        success_rates = [57.1, 35.7, 35.7]
+        dose_variations = [0, 12.5, 25]
         
-        col1, col2 = st.columns([3, 2])
+        # Create plot
+        fig = go.Figure()
         
-        with col1:
-            # Plot BMI relationship
-            fig = plot_bmi_dose_relationship(width=600, height=400)
-            st.plotly_chart(fig)
+        # Add bars for success rates
+        fig.add_trace(go.Bar(
+            x=bmi_categories,
+            y=success_rates,
+            name='Success Rate (%)',
+            marker_color='#27ae60',
+            opacity=0.7
+        ))
+        
+        # Add line for dose variations
+        fig.add_trace(go.Scatter(
+            x=bmi_categories,
+            y=dose_variations,
+            mode='lines+markers',
+            name='Dose Variation (mcg)',
+            marker=dict(color='#e74c3c'),
+            yaxis='y2'
+        ))
+        
+        # Update layout with dual y-axis
+        fig.update_layout(
+            title='BMI Impact on Success Rate and Dose Requirements',
+            xaxis=dict(title='BMI Category'),
+            yaxis=dict(title='Success Rate (%)', side='left', range=[0, 100]),
+            yaxis2=dict(title='Dose Variation (mcg)', side='right', overlaying='y', range=[0, 30]),
+            legend=dict(x=0.01, y=0.99, bgcolor='rgba(255, 255, 255, 0.5)'),
+            width=600,
+            height=400
+        )
+        
+        st.plotly_chart(fig)
             
+    with col2:
+        st.markdown("""
+        #### Key Findings
+        
+        - **Low BMI (≤27.67 kg/m²):** Highest success rate (57.1%) for achieving euthyroid status.
+        
+        - **Medium/High BMI (>27.67 kg/m²):** Lower success rate (35.7%), indicating more 
+        challenging dose optimization.
+        
+        - **Dose Requirements:** Higher BMI patients typically required higher doses with greater 
+        dose variations over time.
+        
+        - **Clinical Implication:** BMI-stratified initial dosing and monitoring protocols are 
+        recommended to improve outcomes.
+        """)
 
-def about_page():
-    """About page with information about the tool and developers"""
+elif selected == "About":
     st.markdown('<h1 class="main-header">About ThyroDosingAI</h1>', unsafe_allow_html=True)
     
     # Tool overview
-    with st.container():
-        st.markdown('<div class="stcard">', unsafe_allow_html=True)
-        st.subheader("Tool Overview")
-        
-        st.markdown("""
-        **ThyroDosingAI** is a precision medicine calculator designed to optimize levothyroxine 
-        replacement therapy for patients who have undergone total thyroidectomy. This tool is based on 
-        advanced machine learning analysis of 619 post-thyroidectomy patients from the King Abdullah 
-        International Medical Research Center (KAIMRC), the tool was developed by KliniKa Clinical Research Organization.
-        
-        The calculator implements a novel BMI-stratified dosing framework that was shown to significantly 
-        improve achievement of euthyroid status at 6 months post-surgery compared to standard 
-        weight-based protocols.
-        """)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.subheader("Tool Overview")
+    
+    st.markdown("""
+    **ThyroDosingAI** is a precision medicine calculator designed to optimize levothyroxine 
+    replacement therapy for patients who have undergone total thyroidectomy. This tool is based on 
+    advanced machine learning analysis of 619 post-thyroidectomy patients from the King Abdullah 
+    International Medical Research Center (KAIMRC).
+    
+    The calculator implements a novel BMI-stratified dosing framework that was shown to significantly 
+    improve achievement of euthyroid status at 6 months post-surgery compared to standard 
+    weight-based protocols.
+    """)
     
     # Research basis
-    with st.container():
-        st.markdown('<div class="stcard">', unsafe_allow_html=True)
-        st.subheader("Research Foundation")
-        
-        col1, col2 = st.columns([2, 1])
-        
-        with col1:
-            st.markdown("""
-            This tool is based on the research paper:
-            
-            > **"Predicting Optimal Levothyroxine Replacement Therapy After Total Thyroidectomy: A Machine Learning-Based Study"**
-            
-            Key findings from this study include:
-            
-            - **BMI as Primary Predictor:** BMI was identified as the dominant predictor of achieving euthyroid status
-            - **Success Rate Stratification:** Significant differences in success rates between low BMI (57.1%) and higher BMI categories (35.7%)
-            - **Naive Bayes Performance:** The Naive Bayes classifier achieved high performance (accuracy: 0.833, AUC: 0.857)
-            - **Optimal Assessment Timepoint:** The 6-month timepoint showed the most reliable predictive capability
-            """)
-            
-        with col2:
-            st.markdown("""
-            #### Study Details
-            
-            - **Patients:** 619
-            - **Demographics:** 82.7% female
-            - **Age Range:** 18-75 years
-            - **Mean BMI:** 31.8 ± 7.4 kg/m²
-            - **Follow-up:** 6-12 months
-            - **Validation:** 10-fold cross-validation
-            """)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
+    st.subheader("Research Foundation")
     
-    # Precision Medicine Framework
-    with st.container():
-        st.markdown('<div class="stcard">', unsafe_allow_html=True)
-        st.subheader("Precision Medicine Framework")
-        
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
         st.markdown("""
-        ThyroDosingAI embodies the principles of precision medicine by:
+        This tool is based on the research paper:
         
-        1. **Personalization:** Tailoring dosing recommendations based on individual patient characteristics
-        2. **Risk Stratification:** Identifying patients at higher risk of suboptimal outcomes
-        3. **Evidence-Based Protocols:** Implementing protocols based on machine learning analysis of real patient data
-        4. **Outcome Optimization:** Focusing on achieving euthyroid status more efficiently than standard approaches
-        5. **Adaptive Monitoring:** Providing risk-stratified monitoring recommendations
+        > **"Predicting Optimal Levothyroxine Replacement Therapy After Total Thyroidectomy: A Machine Learning-Based Study"**
         
-        This approach moves beyond the current standard weight-based dosing to a more nuanced, 
-        data-driven framework that can significantly improve patient outcomes.
+        Key findings from this study include:
+        
+        - **BMI as Primary Predictor:** BMI was identified as the dominant predictor of achieving euthyroid status
+        - **Success Rate Stratification:** Significant differences in success rates between low BMI (57.1%) and higher BMI categories (35.7%)
+        - **Naive Bayes Performance:** The Naive Bayes classifier achieved high performance (accuracy: 0.833, AUC: 0.857)
+        - **Optimal Assessment Timepoint:** The 6-month timepoint showed the most reliable predictive capability
         """)
         
-        st.markdown('</div>', unsafe_allow_html=True)
+    with col2:
+        st.markdown("""
+        #### Study Details
+        
+        - **Patients:** 619
+        - **Demographics:** 82.7% female
+        - **Age Range:** 18-75 years
+        - **Mean BMI:** 31.8 ± 7.4 kg/m²
+        - **Follow-up:** 6-12 months
+        - **Validation:** 10-fold cross-validation
+        """)
     
+    # References and citations
+    st.subheader("References & Citations")
+    
+    st.markdown("""
+    1. Al-Dhahri, S.F., et al., *Optimal levothyroxine dose in post-total thyroidectomy patients: a prediction model for initial dose titration.* Eur Arch Otorhinolaryngol, 2019. **276**(9): p. 2559-2564.
 
-#################################################
-# App Execution
-#################################################
+    2. The full research paper on which this tool is based can be accessed through the institution's repository.
+    """)
 
-if __name__ == "__main__":
-    main()
+    st.markdown("""
+    #### Development
+    
+    Based on machine learning research from KAIMRC.  
+    Developed by KlinikaCRO.
+    """)
