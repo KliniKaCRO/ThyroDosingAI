@@ -504,7 +504,7 @@ def main():
         
         st.markdown('<div class="divider"></div>', unsafe_allow_html=True)
         st.markdown('<p style="font-size: 12px; color: #95a5a6;">© 2025 ThyroDosingAI</p>', unsafe_allow_html=True)
-        st.markdown('<p style="font-size: 12px; color: #95a5a6;">Based on machine learning research from KAIMRC</p>', unsafe_allow_html=True)
+        st.markdown('<p style="font-size: 12px; color: #95a5a6;">Based on machine learning research from KAIMRC. Developed by KliniKa CRO</p>', unsafe_allow_html=True)
     
     # Main content
     if selected == "Calculator":
@@ -852,7 +852,7 @@ def about_page():
         **ThyroDosingAI** is a precision medicine calculator designed to optimize levothyroxine 
         replacement therapy for patients who have undergone total thyroidectomy. This tool is based on 
         advanced machine learning analysis of 619 post-thyroidectomy patients from the King Abdullah 
-        International Medical Research Center (KAIMRC).
+        International Medical Research Center (KAIMRC), the tool was developed by KliniKa Clinical Research Organization.
         
         The calculator implements a novel BMI-stratified dosing framework that was shown to significantly 
         improve achievement of euthyroid status at 6 months post-surgery compared to standard 
