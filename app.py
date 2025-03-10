@@ -795,15 +795,6 @@ def model_insights_page(model):
         fig = plot_variable_importance(feature_importance)
         st.plotly_chart(fig)
         
-        st.markdown("""
-        **Key Finding:** While multiple variables were initially identified as potentially predictive, 
-        BMI demonstrated the most consistent and clinically applicable stratification capability. 
-        
-        The other laboratory variables (PTH, T4, T3) showed inconsistent stratification and were not 
-        as reliable for predicting euthyroid achievement in the clinical validation phase.
-        """)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
     
     # BMI Impact Analysis
     with st.container():
