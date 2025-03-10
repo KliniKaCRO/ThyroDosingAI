@@ -817,23 +817,6 @@ def model_insights_page(model):
             fig = plot_bmi_dose_relationship(width=600, height=400)
             st.plotly_chart(fig)
             
-        with col2:
-            st.markdown("""
-            #### Key Findings
-            
-            - **Low BMI (≤27.67 kg/m²):** Highest success rate (57.1%) for achieving euthyroid status.
-            
-            - **Medium/High BMI (>27.67 kg/m²):** Lower success rate (35.7%), indicating more 
-            challenging dose optimization.
-            
-            - **Dose Requirements:** Higher BMI patients typically required higher doses with greater 
-            dose variations over time.
-            
-            - **Clinical Implication:** BMI-stratified initial dosing and monitoring protocols are 
-            recommended to improve outcomes.
-            """)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
 
 def about_page():
     """About page with information about the tool and developers"""
