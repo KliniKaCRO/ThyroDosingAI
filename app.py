@@ -916,24 +916,6 @@ def about_page():
         
         st.markdown('</div>', unsafe_allow_html=True)
     
-    # Citations and references
-    with st.container():
-        st.markdown('<div class="stcard">', unsafe_allow_html=True)
-        st.subheader("References & Citations")
-        
-        st.markdown("""
-        1. Gottwald-Hostalek, U. and S. Razvi, *Getting the levothyroxine (LT4) dose right for adults with hypothyroidism: opportunities and challenges in the use of modern LT4 preparations.* Curr Med Res Opin, 2022. **38**(11): p. 1865-1870.
-
-        2. Al-Dhahri, S.F., et al., *Optimal levothyroxine dose in post-total thyroidectomy patients: a prediction model for initial dose titration.* Eur Arch Otorhinolaryngol, 2019. **276**(9): p. 2559-2564.
-
-        3. Nair, A., et al., *Efficacy of a levothyroxine dosage regimen based on serum thyrotropin level, for primary hypothyroidism. An open label dose finding study.* J Family Med Prim Care, 2024. **13**(1): p. 70-76.
-
-        4. Janssen Daalen, J.M., et al., *Model-Informed Precision Dosing Using Machine Learning for Levothyroxine in General Practice: Development, Validation and Clinical Simulation Trial.* Clin Pharmacol Ther, 2024. **116**(3): p. 824-833.
-
-        5. Maghsoudi, H., et al., *Levothyroxine dosage determination according to body mass index (BMI) after total thyroidectomy.* 2019. **41**(2): p. 196.
-        """)
-        
-        st.markdown('</div>', unsafe_allow_html=True)
 
 #################################################
 # App Execution
